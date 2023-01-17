@@ -38,6 +38,8 @@
   (let ((struct-type (or
                       struct-type
                       (type-of (car structs)))))
+    (message "about to search %s for value %s" slot value)
+    (message "within %s " structs)
     (seq-find (lambda (struct)
                 (string= (cl-struct-slot-value struct-type slot struct) value))
               structs)))
@@ -61,17 +63,14 @@
     (pp (format "projects:\n%s" projects))
         projects))
 
-;; (defun treemacs-declarative-workspaces--append-project (workspace project)
-;;   "Update WORKSPACE struct projects slot to PROJECTS."
-;;     (setf (treemacs-declarative-workspaces--workspace-projects workspace)
-;;           (append (treemacs-declarative-workspaces--workspace-projects workspace) project)))
 
 (defun treemacs-declarative-workspaces--append-project (workspace project)
-  "Append PROJECT to the `projects` slot of WORKSPACE struct and update the struct in treemacs-declarative-workspaces--desired-state"
+  "Append PROJECT to the `projects` slot of WORKSPACE struct and update the struct in treemacs-declarative-workspaces--desired-state."
   (let* ((index (cl-position workspace treemacs-declarative-workspaces--desired-state :test #'equal))
          (new-workspace (copy-sequence workspace))
-         (new-projects (append (treemacs-declarative-workspaces--workspace-projects new-workspace) project)))
-    (pp (format "\n\nAbout to set %s to \n%s\n\n" index new-projects))
+         (projects (treemacs-declarative-workspaces--workspace-projects new-workspace))
+         (new-projects (pushnew project projects :test #'equal)))
+    (print (format "\n\nAbout to set %s to \n%s\n\n" index new-projects))
     (setf (treemacs-workspace->projects new-workspace)  new-projects)
     (setf (nth index treemacs-declarative-workspaces--desired-state) new-workspace)))
 
@@ -85,7 +84,6 @@
     (print (format "working with:\t%s" target-workspace))
     (print (format "using these attrs with:\t%s" project-attrs))
     (cond
-                                        ; Workspace already existed, add new sibling
      ((treemacs-workspace-p target-workspace)
       (let ((project (apply 'treemacs-project->create! project-attrs)))
         (print (format "about to append:\t%s" project))
@@ -93,11 +91,12 @@
         (treemacs-declarative-workspaces--append-project target-workspace project)))
      (t  ; Workspace didn't exist, create it along with new project
       (print (format "about to create workspace:\t%s" workspace))
-      (setq treemacs-declarative-workspaces--desired-state
-       (list (treemacs-workspace->create!
+      (pushnew (treemacs-workspace->create!
               :name workspace
               :projects (list (apply 'treemacs-project->create!
-                                     project-attrs)))))))))
+                                     project-attrs)))
+            treemacs-declarative-workspaces--desired-state
+            :test #'equal)))))
 
 (defun treemacs-declarative-workspace--unassign-project (project workspace)
   "Add PROJECT to WORKSPACE in desired state."
@@ -111,6 +110,7 @@
 
 (defun treemacs-declarative-workspaces--override-workspaces ()
   "Set treemacs-workspaces to desired state."
+  (message "going to set treemacs workspaces to desired state")
   (setq treemacs--workspaces treemacs-declarative-workspaces--desired-state))
 
 ;;;###autoload
