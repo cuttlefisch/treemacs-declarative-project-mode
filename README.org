@@ -1,0 +1,1 @@
+* Treemacs Declarative Project Mode

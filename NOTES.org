@@ -1,0 +1,56 @@
+#+title: Notes
+
+* Treemacs Datastructures
+Some info on treemacs data structures
+#+begin_src elisp
+(cl-struct-slot-info 'treemacs-project)
+;; ((cl-tag-slot)
+;;  (name nil)
+;;  (path nil)
+;;  (path-status nil)
+;;  (is-disabled? nil))
+#+end_src
+
+#+RESULTS:
+| cl-tag-slot  |     |
+| name         | nil |
+| path         | nil |
+| path-status  | nil |
+| is-disabled? | nil |
+
+#+begin_src elisp
+(cl-struct-slot-info 'treemacs-workspace)
+;; ((cl-tag-slot)
+;;  (name nil)
+;;  (projects nil))
+#+end_src
+
+#+RESULTS:
+| cl-tag-slot |     |
+| name        | nil |
+| projects    | nil |
+
+
+** Accessing values
+Access workspace project list or name with ~cl-struct-slot-value~
+#+begin_src elisp :results list
+(cl-struct-slot-value 'treemacs-workspace 'projects (car (treemacs-workspaces)))
+#+end_src
+
+#+RESULTS:
+- #s(treemacs-project "yeet/proj" "/tmp/yeet/proj" local-readable nil)
+- #s(treemacs-project "yeetme" "/tmp/yeet2.0/proj2" local-readable nil)
+- #s(treemacs-project "treemacs" "/home/heimdall/.emacs.d/.local/straight/repos/treemacs" local-readable nil)
+
+Directly pull out project path from first project in first workspace:
+#+begin_src elisp :results verbatim
+(cl-struct-slot-value 'treemacs-project
+                      'path
+                      (car (cl-struct-slot-value
+                            'treemacs-workspace
+                            'projects
+                            (car (treemacs-workspaces)))))
+#+end_src
+
+#+RESULTS:
+: "/tmp/yeet/proj"
