@@ -9,7 +9,7 @@
 ;; Version: 0.0.1
 ;; Keywords: abbrev bib c calendar comm convenience data docs emulations extensions faces files frames games hardware help hypermedia i18n internal languages lisp local maint mail matching mouse multimedia news outlines processes terminals tex tools unix vc wp
 ;; Homepage: https://github.com/cuttlefisch/treemacs-declarative-workspaces-mode
-;; Package-Requires: ((emacs "25.1")) (treemacs "3.0")
+;; Package-Requires: ((emacs "25.1") (treemacs "3.0"))
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -38,15 +38,15 @@
   (expand-file-name "~/.emacs.d/.local/cache/treemacs-declared-worksapces.el")
   "Store persistant treemacs declared workspaces.")
 
-;;;###autoload
-(defun treemacs-declarative-workspaces--project-create (project-attrs)
-  "Create a treemacs-project struct from PROJECT-ATTRS."
-    (apply 'treemacs-workspace->create! project-attrs))
+;; ;;;###autoload
+;; (defun treemacs-declarative-workspaces--project-create (project-attrs)
+;;   "Create a treemacs-project struct from PROJECT-ATTRS."
+;;     (apply 'treemacs-workspace->create! project-attrs))
 
-;;;###autoload
-(defun treemacs-declarative-workspaces--workspace-create (workspace-attrs)
-  "Create a treemacs-project struct from WORKSPACE-ATTRS."
-    (apply 'treemacs-workspace->create! workspace-attrs))
+;; ;;;###autoload
+;; (defun treemacs-declarative-workspaces--workspace-create (workspace-attrs)
+;;   "Create a treemacs-project struct from WORKSPACE-ATTRS."
+;;     (apply 'treemacs-workspace->create! workspace-attrs))
 
 (defun treemacs-declarative-workspaces--find-by-slot-value (slot value structs &optional struct-type)
   "Return the first struct in STRUCTS to have KEY of VALUE or nil."
