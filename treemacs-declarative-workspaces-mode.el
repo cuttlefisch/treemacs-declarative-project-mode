@@ -149,6 +149,20 @@
     (treemacs-declarative-workspaces--override-workspaces))
   (treemacs-declarative-workspaces--save-cache))
 
+(defun treemacs-declarative-workspaces--assign-declared-project (project-resources)
+  "Assign a project when it's declared."
+ (when treemacs-declarative-workspaces-mode
+  (when-let ((project-workspaces (gethash 'treemacs-workspaces project-resources))
+             (project-file (gethash 'project-file project-resources)))
+    (seq-doseq (workspace project-workspaces)
+      (let ((project-name (or (gethash 'project-name project-resources) workspace)))
+        (when treemacs-declarative-workspaces-mode
+        (treemacs-declarative-workspace--assign-project (list :name project-name
+                                                          :path (file-name-directory project-file)
+                                                          :path-status 'local-readable
+                                                          :is-disabled? nil)
+                                                        workspace)))))))
+
 (defun treemacs-declarative-workspaces--override-workspaces ()
   "Set treemacs-workspaces to desired state."
   (setq treemacs--workspaces treemacs-declarative-workspaces--desired-state))
@@ -167,6 +181,8 @@ desired state."
       (treemacs-declarative-workspaces--read-cache)
       (advice-add 'treemacs-add-and-display-current-project
                   :around #'(lambda (&rest args) (treemacs--init)) )
+      (add-hook 'declarative-project--apply-treemacs-workspaces-hook
+       #'treemacs-declarative-workspaces--assign-declared-project)
       (add-hook 'treemacs-switch-workspace-hook
                 #'treemacs-declarative-workspaces--override-workspaces))
     (progn
