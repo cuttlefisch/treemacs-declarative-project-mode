@@ -50,13 +50,12 @@
 (defun treemacs-declarative-workspaces--workspaces-by-name (name)
   "Return first workspace in desired state with 'name NAME or nil."
   (pp (format "finding workspace by name:\t%s" name))
-  (let ((ws (treemacs-declarative-workspaces--find-by-slot-value
-             'name
-             name
-             treemacs-declarative-workspaces--desired-state
-             'treemacs-workspace)))
-    (pp (format "%s" ws))
-    ws))
+  (let* ((index (cl-position name
+                             treemacs-declarative-workspaces--desired-state
+                             :test #'equal
+                             :key (lambda (ws) (treemacs-workspace->name ws)))))
+    (when index
+        (nth index treemacs-declarative-workspaces--desired-state))))
 
 (defun treemacs-declarative-workspaces--workspaces-projects (workspace)
   (let ((projects (cl-struct-slot-value
@@ -71,7 +70,7 @@
   (let* ((index (cl-position workspace treemacs-declarative-workspaces--desired-state :test #'equal))
          (new-workspace (copy-sequence workspace))
          (projects (treemacs-declarative-workspaces--workspaces-projects new-workspace))
-         (new-projects (cl-pushnew project projects :test #'equal)))
+         (new-projects (cl-pushnew project projects :test #'equal :key (lambda (pj) (treemacs-project->name pj)))))
     (print (format "\n\nAbout to set %s to \n%s\n\n" index new-projects))
     (setf (treemacs-workspace->projects new-workspace)  new-projects)
     (setf (nth index treemacs-declarative-workspaces--desired-state) new-workspace)))
@@ -110,7 +109,7 @@
     (cond
      ((treemacs-workspace-p target-workspace)
       (let ((project (apply 'treemacs-project->create! project-attrs)))
-        (print (format "about to append:\t%s" project))
+        (message (format "about to append:\t%s" project))
         (treemacs-declarative-workspaces--append-project target-workspace project)))
      (t  ; Workspace didn't exist, create it along with new project
       (print (format "about to create workspace:\t%s" workspace))
@@ -133,6 +132,7 @@
                                   (treemacs-workspace->projects workspace)
                                   :test #'string=
                                   :key (lambda (pj) (treemacs-project->name pj)))))
+    (message "Setting new projects to:\n%s" new-projects)
     (setf (treemacs-workspace->projects workspace) new-projects))
   (when treemacs-declarative-workspaces-mode
     (treemacs-declarative-workspaces--override-workspaces))
