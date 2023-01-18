@@ -13,7 +13,7 @@
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
-;; Commentary:
+;;; Commentary:
 ;;      The list of the desired workspace state operates as
 ;;      anindependent workspace collection a separate from the
 ;;      treemacs-workspaces. The same project & workspace structs are used for
@@ -27,6 +27,11 @@
 (require 'treemacs)
 (require 'yaml)
 (require 'yaml-mode)
+
+;;;###autoload
+(defun treemacs-declarative-workspaces--minimal-desired-state (&optional default-name)
+  (list (treemacs-workspace->create! :name (or default-name "Default") :projects '())))
+
 (defvar treemacs-declarative-workspaces--desired-state (treemacs-declarative-workspaces--minimal-desired-state)
   "List of desired workspace/project state from decared worksapces.")
 (defvar treemacs-declarative-workspaces--cache-file
@@ -60,9 +65,6 @@
                    workspace)))
     (pp (format "projects:\n%s" projects))
     projects))
-
-(defun treemacs-declarative-workspaces--minimal-desired-state (&optional default-name)
-  (list (treemacs-workspace->create! :name (or default-name "Default") :projects '())))
 
 (defun treemacs-declarative-workspaces--append-project (workspace project)
   "Append PROJECT to the `projects` slot of WORKSPACE struct and update the struct in treemacs-declarative-workspaces--desired-state."
