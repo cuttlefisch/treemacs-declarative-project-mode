@@ -157,16 +157,17 @@
              (project-file (gethash 'project-file project-resources)))
     (message "Looks like we're ready to start assigning workspaces")
     (seq-doseq (workspace project-workspaces)
-      (let ((project-name (or (gethash 'project-name
-                                       project-resources)
-                              workspace)))
+      (let* ((project-name (or (gethash 'project-name
+                                        project-resources)
+                               workspace))
+             (project-attrs (list
+                             :name project-name
+                             :path (file-name-directory project-file)
+                             :path-status 'local-readable
+                             :is-disabled? nil)))
         (message "about to actually assign")
-        (treemacs-declarative-workspaces--assign-project (list
-                                                         :name project-name
-                                                         :path (file-name-directory project-file)
-                                                         :path-status 'local-readable
-                                                         :is-disabled? nil)
-                                                        workspace))))))
+        (treemacs-declarative-workspaces--assign-project project-attrs
+                                                         workspace))))))
 
 (defun treemacs-declarative-workspaces--override-workspaces ()
   "Set treemacs-workspaces to desired state."
