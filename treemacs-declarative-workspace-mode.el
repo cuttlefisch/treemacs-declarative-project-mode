@@ -25,10 +25,10 @@
 ;;
 ;;; Code:
 (require 'treemacs)
+(require 'treemacs-workspaces)
 (require 'yaml)
 (require 'yaml-mode)
 
-;;;###autoload
 (defun treemacs-declarative-workspaces--minimal-desired-state (&optional default-name)
   (list (treemacs-workspaces->create! :name (or default-name "Default") :projects '())))
 
