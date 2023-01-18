@@ -25,18 +25,28 @@
 ;;
 ;;; Code:
 (require 'treemacs)
+(require 'treemacs-workspaces)
 (require 'yaml)
 (require 'yaml-mode)
 
-;;;###autoload
 (defun treemacs-declarative-workspaces--minimal-desired-state (&optional default-name)
-  (list (treemacs-workspaces->create! :name (or default-name "Default") :projects '())))
+  (list (treemacs-declarative-workspaces--workspace-create (list :name (or default-name "Default") :projects '()))))
 
 (defvar treemacs-declarative-workspaces--desired-state (treemacs-declarative-workspaces--minimal-desired-state)
   "List of desired workspace/project state from decared worksapces.")
 (defvar treemacs-declarative-workspaces--cache-file
   (expand-file-name "~/.emacs.d/.local/cache/treemacs-declared-worksapces.el")
   "Store persistant treemacs declared workspaces.")
+
+;;;###autoload
+(defun treemacs-declarative-workspaces--project-create (project-attrs)
+  "Create a treemacs-project struct from PROJECT-ATTRS."
+    (apply 'treemacs-workspace->create! project-attrs))
+
+;;;###autoload
+(defun treemacs-declarative-workspaces--workspace-create (workspace-attrs)
+  "Create a treemacs-project struct from WORKSPACE-ATTRS."
+    (apply 'treemacs-workspace->create! workspace-attrs))
 
 (defun treemacs-declarative-workspaces--find-by-slot-value (slot value structs &optional struct-type)
   "Return the first struct in STRUCTS to have KEY of VALUE or nil."
