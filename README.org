@@ -1,1 +1,19 @@
-* Treemacs Declarative Project Mode
+* Treemacs Declarative Workspaces Mode
+
+This package is a minor mode for the popular file and project explorer for Emacs,
+Treemacs. It allows users to explicitly manage workspaces by keeping a
+treemacs-declarative-workspaces--desired-state containing the strict workspace contents.
+
+When this mode is enabled, the contents of the Treemacs window will only display members
+of the selected workspace. Opening a file not belonging to that workspace will not show
+any changes in the side-buffer.
+
+This package is intended for use in conjunction with the [[https://github.com/cuttlefisch/declarative-project-mode][declarative project mode
+package]], which allows users to specify their project contents and associated workspaces
+in a simple declarative .project file. See that project for example project specification.
+Enabling treemacs-declarative-workspaces-mode will result in updates to the desired state
+when installing workspaces specified in the .project file.
+
+Please note that this package is currently in experimental stages, and as such may contain
+bugs or have limited functionality. We welcome any feedback or contributions to improve
+the package.
