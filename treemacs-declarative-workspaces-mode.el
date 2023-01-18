@@ -30,23 +30,13 @@
 (require 'yaml-mode)
 
 (defun treemacs-declarative-workspaces--minimal-desired-state (&optional default-name)
-  (list (treemacs-declarative-workspaces--workspace-create (list :name (or default-name "Default") :projects '()))))
+  (list (treemacs-workspace->create! list :name (or default-name "Default") :projects '())))
 
 (defvar treemacs-declarative-workspaces--desired-state (treemacs-declarative-workspaces--minimal-desired-state)
   "List of desired workspace/project state from decared worksapces.")
 (defvar treemacs-declarative-workspaces--cache-file
   (expand-file-name "~/.emacs.d/.local/cache/treemacs-declared-worksapces.el")
   "Store persistant treemacs declared workspaces.")
-
-;; ;;;###autoload
-;; (defun treemacs-declarative-workspaces--project-create (project-attrs)
-;;   "Create a treemacs-project struct from PROJECT-ATTRS."
-;;     (apply 'treemacs-workspace->create! project-attrs))
-
-;; ;;;###autoload
-;; (defun treemacs-declarative-workspaces--workspace-create (workspace-attrs)
-;;   "Create a treemacs-project struct from WORKSPACE-ATTRS."
-;;     (apply 'treemacs-workspace->create! workspace-attrs))
 
 (defun treemacs-declarative-workspaces--find-by-slot-value (slot value structs &optional struct-type)
   "Return the first struct in STRUCTS to have KEY of VALUE or nil."
@@ -83,7 +73,7 @@
          (projects (treemacs-declarative-workspaces--workspaces-projects new-workspace))
          (new-projects (cl-pushnew project projects :test #'equal)))
     (print (format "\n\nAbout to set %s to \n%s\n\n" index new-projects))
-    (setf (treemacs-workspaces->projects new-workspace)  new-projects)
+    (setf (treemacs-workspace->projects new-workspace)  new-projects)
     (setf (nth index treemacs-declarative-workspaces--desired-state) new-workspace)))
 
 (defun treemacs-declarative-workspaces--save-cache ()
@@ -124,7 +114,7 @@
         (treemacs-declarative-workspaces--append-project target-workspace project)))
      (t  ; Workspace didn't exist, create it along with new project
       (print (format "about to create workspace:\t%s" workspace))
-      (cl-pushnew (treemacs-workspaces->create!
+      (cl-pushnew (treemacs-workspace->create!
                    :name workspace
                    :projects (list (apply 'treemacs-project->create!
                                           project-attrs)))
@@ -140,10 +130,10 @@
   (print (format"Removing project:\t%s" project))
   (let* ((workspace (treemacs-declarative-workspaces--workspaces-by-name workspace))
          (new-projects (cl-remove project
-                                  (treemacs-workspaces->projects workspace)
+                                  (treemacs-workspace->projects workspace)
                                   :test #'string=
                                   :key (lambda (pj) (treemacs-project->name pj)))))
-    (setf (treemacs-workspaces->projects workspace) new-projects))
+    (setf (treemacs-workspace->projects workspace) new-projects))
   (when treemacs-declarative-workspaces-mode
     (treemacs-declarative-workspaces--override-workspaces))
   (treemacs-declarative-workspaces--save-cache))
