@@ -1,4 +1,4 @@
-;;; treemacs-declarative-workspace-mode.el --- Description -*- lexical-binding: t; -*-
+;;; treemacs-declarative-workspaces-mode.el --- Description -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2023 Hayden Stanko
 ;;
@@ -8,7 +8,7 @@
 ;; Modified: January 17, 2023
 ;; Version: 0.0.1
 ;; Keywords: abbrev bib c calendar comm convenience data docs emulations extensions faces files frames games hardware help hypermedia i18n internal languages lisp local maint mail matching mouse multimedia news outlines processes terminals tex tools unix vc wp
-;; Homepage: https://github.com/cuttlefisch/treemacs-declarative-workspace-mode
+;; Homepage: https://github.com/cuttlefisch/treemacs-declarative-workspaces-mode
 ;; Package-Requires: ((emacs "25.1"))
 ;;
 ;; This file is not part of GNU Emacs.
@@ -30,7 +30,7 @@
 
 ;;;###autoload
 (defun treemacs-declarative-workspaces--minimal-desired-state (&optional default-name)
-  (list (treemacs-workspace->create! :name (or default-name "Default") :projects '())))
+  (list (treemacs-workspaces->create! :name (or default-name "Default") :projects '())))
 
 (defvar treemacs-declarative-workspaces--desired-state (treemacs-declarative-workspaces--minimal-desired-state)
   "List of desired workspace/project state from decared worksapces.")
@@ -47,7 +47,7 @@
                 (string= (cl-struct-slot-value struct-type slot struct) value))
               structs)))
 
-(defun treemacs-declarative-workspaces--workspace-by-name (name)
+(defun treemacs-declarative-workspaces--workspaces-by-name (name)
   "Return first workspace in desired state with 'name NAME or nil."
   (pp (format "finding workspace by name:\t%s" name))
   (let ((ws (treemacs-declarative-workspaces--find-by-slot-value
@@ -58,7 +58,7 @@
     (pp (format "%s" ws))
     ws))
 
-(defun treemacs-declarative-workspaces--workspace-projects (workspace)
+(defun treemacs-declarative-workspaces--workspaces-projects (workspace)
   (let ((projects (cl-struct-slot-value
                    'treemacs-workspace
                    'projects
@@ -70,10 +70,10 @@
   "Append PROJECT to the `projects` slot of WORKSPACE struct and update the struct in treemacs-declarative-workspaces--desired-state."
   (let* ((index (cl-position workspace treemacs-declarative-workspaces--desired-state :test #'equal))
          (new-workspace (copy-sequence workspace))
-         (projects (treemacs-declarative-workspaces--workspace-projects new-workspace))
+         (projects (treemacs-declarative-workspaces--workspaces-projects new-workspace))
          (new-projects (cl-pushnew project projects :test #'equal)))
     (print (format "\n\nAbout to set %s to \n%s\n\n" index new-projects))
-    (setf (treemacs-workspace->projects new-workspace)  new-projects)
+    (setf (treemacs-workspaces->projects new-workspace)  new-projects)
     (setf (nth index treemacs-declarative-workspaces--desired-state) new-workspace)))
 
 (defun treemacs-declarative-workspaces--save-cache ()
@@ -99,22 +99,22 @@
        (t
         (treemacs-declarative-workspaces--minimal-desired-state))))))
 
-(defun treemacs-declarative-workspace--assign-project (project-attrs workspace)
+(defun treemacs-declarative-workspaces--assign-project (project-attrs workspace)
   "Add PROJECT to WORKSPACE in desired state."
   (interactive)
   (print "about to enter first let")
   (print (format "using workspace:\n%s" workspace))
-  (let ((target-workspace (treemacs-declarative-workspaces--workspace-by-name workspace)))
+  (let ((target-workspace (treemacs-declarative-workspaces--workspaces-by-name workspace)))
     (print (format "working with:\t%s" target-workspace))
     (print (format "using these attrs with:\t%s" project-attrs))
     (cond
-     ((treemacs-workspace-p target-workspace)
+     ((treemacs-workspaces-p target-workspace)
       (let ((project (apply 'treemacs-project->create! project-attrs)))
         (print (format "about to append:\t%s" project))
         (treemacs-declarative-workspaces--append-project target-workspace project)))
      (t  ; Workspace didn't exist, create it along with new project
       (print (format "about to create workspace:\t%s" workspace))
-      (cl-pushnew (treemacs-workspace->create!
+      (cl-pushnew (treemacs-workspaces->create!
                    :name workspace
                    :projects (list (apply 'treemacs-project->create!
                                           project-attrs)))
@@ -124,25 +124,25 @@
     (treemacs-declarative-workspaces--override-workspaces))
   (treemacs-declarative-workspaces--save-cache))
 
-(defun treemacs-declarative-workspace--unassign-project (project workspace)
+(defun treemacs-declarative-workspaces--unassign-project (project workspace)
   "Add PROJECT to WORKSPACE in desired state."
   (interactive)
   (print (format"Removing project:\t%s" project))
-  (let* ((workspace (treemacs-declarative-workspaces--workspace-by-name workspace))
+  (let* ((workspace (treemacs-declarative-workspaces--workspaces-by-name workspace))
          (new-projects (cl-remove project
-                                  (treemacs-workspace->projects workspace)
+                                  (treemacs-workspaces->projects workspace)
                                   :test #'string=
                                   :key (lambda (pj) (treemacs-project->name pj)))))
-    (setf (treemacs-workspace->projects workspace) new-projects))
+    (setf (treemacs-workspaces->projects workspace) new-projects))
   (when treemacs-declarative-workspaces-mode
     (treemacs-declarative-workspaces--override-workspaces))
   (treemacs-declarative-workspaces--save-cache))
 
-(defun treemacs-declarative-workspace--remove-workspace (workspace)
+(defun treemacs-declarative-workspaces--remove-workspace (workspace)
   "Add PROJECT to WORKSPACE in desired state."
   (interactive)
   (setq treemacs-declarative-workspaces--desired-state
-        (cl-remove (treemacs-declarative-workspaces--workspace-by-name workspace)
+        (cl-remove (treemacs-declarative-workspaces--workspaces-by-name workspace)
                    treemacs-declarative-workspaces--desired-state
                    :test #'equal))
   (when treemacs-declarative-workspaces-mode
@@ -174,5 +174,5 @@ desired state."
       (remove-hook 'treemacs-switch-workspace
                    #'treemacs-declarative-workspaces--override-workspaces))))
 
-(provide 'treemacs-declarative-workspace-mode)
-;;; treemacs-declarative-workspace-mode.el ends here
+(provide 'treemacs-declarative-workspaces-mode)
+;;; treemacs-declarative-workspaces-mode.el ends here
