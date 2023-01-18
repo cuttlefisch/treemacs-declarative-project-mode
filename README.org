@@ -1,4 +1,4 @@
-* Treemacs Declarative Workspaces Mode
+* Treemacs Declarative Workspace Mode
 
 This package is a minor mode for the popular file and project explorer for Emacs,
 Treemacs. It allows users to explicitly manage workspaces by keeping a
