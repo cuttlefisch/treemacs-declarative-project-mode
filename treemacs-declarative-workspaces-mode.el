@@ -163,8 +163,8 @@ desired state."
   :group 'treemacs
   :lighter "treemacs-declarative-workspaces-mode"
   (if treemacs-declarative-workspaces-mode
-      (setq treemacs-declarative-workspaces--desired-state (treemacs-declarative-workspaces--read-cache))
     (progn
+      (treemacs-declarative-workspaces--read-cache)
       (advice-add 'treemacs-add-and-display-current-project
                   :around #'(lambda (&rest args) (treemacs--init)) )
       (add-hook 'treemacs-switch-workspace
