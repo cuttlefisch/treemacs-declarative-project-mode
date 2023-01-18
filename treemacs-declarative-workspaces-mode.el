@@ -167,11 +167,11 @@ desired state."
       (treemacs-declarative-workspaces--read-cache)
       (advice-add 'treemacs-add-and-display-current-project
                   :around #'(lambda (&rest args) (treemacs--init)) )
-      (add-hook 'treemacs-switch-workspace
+      (add-hook 'treemacs-switch-workspace-hook
                 #'treemacs-declarative-workspaces--override-workspaces))
     (progn
       (advice-remove 'treemacs-add-and-display-current-project #'(lambda (&rest args) (treemacs--init)) )
-      (remove-hook 'treemacs-switch-workspace
+      (remove-hook 'treemacs-switch-workspace-hook
                    #'treemacs-declarative-workspaces--override-workspaces))))
 
 (provide 'treemacs-declarative-workspaces-mode)
