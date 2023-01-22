@@ -9,7 +9,7 @@
 ;; Version: 0.0.1
 ;; Keywords: abbrev bib c calendar comm convenience data docs emulations extensions faces files frames games hardware help hypermedia i18n internal languages lisp local maint mail matching mouse multimedia news outlines processes terminals tex tools unix vc wp
 ;; Homepage: https://github.com/cuttlefisch/treemacs-declarative-workspaces-mode
-;; Package-Requires: ((emacs "25.1") (treemacs "3.0"))
+;; Package-Requires: ((emacs "25.1") (treemacs "2.10"))
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -26,20 +26,28 @@
 ;;; Code:
 (require 'treemacs)
 (require 'treemacs-workspaces)
-(require 'yaml)
-(require 'yaml-mode)
 
-(defun treemacs-declarative-workspaces--minimal-desired-state (&optional default-name)
-  (list (treemacs-workspace->create! list :name (or default-name "Default") :projects '())))
+(defun treemacs-declarative-workspaces--minimal-desired-state ()
+  "Minimal contents for declared workspaces named 'Default'."
+  (list (treemacs-workspace->create! :name "Default"
+                                     :projects '())))
 
 (defvar treemacs-declarative-workspaces--desired-state (treemacs-declarative-workspaces--minimal-desired-state)
   "List of desired workspace/project state from decared worksapces.")
+
 (defvar treemacs-declarative-workspaces--cache-file
-  (expand-file-name "~/.emacs.d/.local/cache/treemacs-declared-worksapces.el")
+  (concat user-emacs-directory "treemacs-declared-worksapces.el")
   "Store persistant treemacs declared workspaces.")
 
+(defvar treemacs-declarative-workspaces--autoprune t
+  "If t automatically remove invalid projects when cache is read.
+Prompt before removing if nil.")
+
+(defvar treemacs-declarative-workspaces-mode nil
+  "Var for treemacs-declarative-workspaces-mode.")
+
 (defun treemacs-declarative-workspaces--find-by-slot-value (slot value structs &optional struct-type)
-  "Return the first struct in STRUCTS to have KEY of VALUE or nil."
+  "Return the first struct in STRUCTS to have SLOT of VALUE or nil."
   (let ((struct-type (or
                       struct-type
                       (type-of (car structs)))))
@@ -48,7 +56,7 @@
               structs)))
 
 (defun treemacs-declarative-workspaces--workspaces-by-name (name)
-  "Return first workspace in desired state with 'name NAME or nil."
+  "Return first workspace in desired state named NAME or nil."
   (pp (format "finding workspace by name:\t%s" name))
   (let* ((index (cl-position name
                              treemacs-declarative-workspaces--desired-state
@@ -57,19 +65,13 @@
     (when index
         (nth index treemacs-declarative-workspaces--desired-state))))
 
-(defun treemacs-declarative-workspaces--workspaces-projects (workspace)
-  (let ((projects (cl-struct-slot-value
-                   'treemacs-workspace
-                   'projects
-                   workspace)))
-    (pp (format "projects:\n%s" projects))
-    projects))
-
 (defun treemacs-declarative-workspaces--append-project (workspace project)
-  "Append PROJECT to the `projects` slot of WORKSPACE struct and update the struct in treemacs-declarative-workspaces--desired-state."
+  "Append PROJECT to the `projects` slot of WORKSPACE struct.
+Next, update the struct in
+treemacs-declarative-workspaces--desired-state."
   (let* ((index (cl-position workspace treemacs-declarative-workspaces--desired-state :test #'equal))
          (new-workspace (copy-sequence workspace))
-         (projects (treemacs-declarative-workspaces--workspaces-projects new-workspace))
+         (projects (treemacs-workspace->projects new-workspace))
          (new-projects (cl-pushnew project projects :test #'equal :key (lambda (pj) (treemacs-project->name pj)))))
     (print (format "\n\nAbout to set %s to \n%s\n\n" index new-projects))
     (setf (treemacs-workspace->projects new-workspace)  new-projects)
@@ -80,11 +82,10 @@
   ;; TODO this looks pretty hacky
   (with-temp-file treemacs-declarative-workspaces--cache-file
     (let ((buf (current-buffer)))
-      (insert "(setq treemacs-declarative-workspaces--desired-state (list " )
-      (seq-map (lambda (workspace)
-                 (prin1 workspace buf))
-               treemacs-declarative-workspaces--desired-state)
-      (insert "))" ))))
+      (prin1 `(setq
+ treemacs-declarative-workspaces--desired-state
+ ',treemacs-declarative-workspaces--desired-state)
+             buf))))
 
 (defun treemacs-declarative-workspaces--read-cache ()
   "Write current desired state to cache file."
@@ -96,10 +97,21 @@
         ;; TODO this is obviously not secure, but we're in emacs
         (load treemacs-declarative-workspaces--cache-file))
        (t
-        (treemacs-declarative-workspaces--minimal-desired-state))))))
+        (treemacs-declarative-workspaces--minimal-desired-state))))
+    (kill-buffer (current-buffer))))
+
+
+(defun treemacs-declarative-workspaces--prune-invalid-projects ()
+  "Remove invalid projects from the cache."
+  (dolist (workspace treemacs-declarative-workspaces--desired-state)
+    (setf (treemacs-workspace->projects workspace)
+          (seq-filter (lambda (project)
+                        (file-exists-p (treemacs-project->path project)))
+                      (treemacs-workspace->projects workspace)))))
+
 
 (defun treemacs-declarative-workspaces--assign-project (project-attrs workspace)
-  "Add PROJECT to WORKSPACE in desired state."
+  "Add new project with PROJECT-ATTRS to WORKSPACE in desired state."
   (interactive)
   (print "about to enter first let")
   (print (format "using workspace:\n%s" workspace))
@@ -109,7 +121,6 @@
     (cond
      ((treemacs-workspace-p target-workspace)
       (let ((project (apply 'treemacs-project->create! project-attrs)))
-        (message (format "about to append:\t%s" project))
         (treemacs-declarative-workspaces--append-project target-workspace project)))
      (t  ; Workspace didn't exist, create it along with new project
       (print (format "about to create workspace:\t%s" workspace))
@@ -132,7 +143,6 @@
                                   (treemacs-workspace->projects workspace)
                                   :test #'string=
                                   :key (lambda (pj) (treemacs-project->name pj)))))
-    (message "Setting new projects to:\n%s" new-projects)
     (setf (treemacs-workspace->projects workspace) new-projects))
   (when treemacs-declarative-workspaces-mode
     (treemacs-declarative-workspaces--override-workspaces))
@@ -150,12 +160,10 @@
   (treemacs-declarative-workspaces--save-cache))
 
 (defun treemacs-declarative-workspaces--assign-declared-project (project-resources)
-  "Assign a project when it's declared."
-  (message "assigning based on these resources:\n%s" project-resources)
+  "Assign a project with PROJECT-RESOURCES when it's declared."
  (when treemacs-declarative-workspaces-mode
   (when-let ((project-workspaces (gethash 'treemacs-workspaces project-resources))
              (project-file (gethash 'project-file project-resources)))
-    (message "Looks like we're ready to start assigning workspaces")
     (seq-doseq (workspace project-workspaces)
       (let* ((project-name (or (gethash 'project-name
                                         project-resources)
@@ -165,7 +173,6 @@
                              :path (file-name-directory project-file)
                              :path-status 'local-readable
                              :is-disabled? nil)))
-        (message "about to actually assign")
         (treemacs-declarative-workspaces--assign-project project-attrs
                                                          workspace))))))
 
@@ -176,8 +183,18 @@
 
 ;;;###autoload
 (define-minor-mode treemacs-declarative-workspaces-mode
-  "When enabled, ensure treemacs workspace contents always match a
-desired state."
+  "Manage treemacs workspaces via distrubuted declarative files.
+
+This package allows users to place `.project' files anywhere across
+the fileystem, and install them to treemacs workspaces via the
+`declarative-project-mode' package. The desired state of workspaces
+is then tracked via a central cache inside `user-emacs-directory'.
+By default invalid projects are removed when the mode initializes,
+set `treemacs-declarative-workspaces--autoprune' to nil to
+prevent such behavior.
+
+Also note that this package currently hijacks the treemacs project
+workflow, and is still highly experimental."
   :init-value nil
   :global t
   :group 'treemacs
@@ -185,14 +202,17 @@ desired state."
   (if treemacs-declarative-workspaces-mode
       (progn
         (treemacs-declarative-workspaces--read-cache)
+        (when treemacs-declarative-workspaces--autoprune
+          (treemacs-declarative-workspaces--prune-invalid-projects))
         (advice-add 'treemacs-add-and-display-current-project
-                    :around #'(lambda (&rest args) (treemacs--init)) )
+                    :around #'(lambda (&rest _) (treemacs--init)) )
         (add-hook 'declarative-project--apply-treemacs-workspaces-hook
                   #'treemacs-declarative-workspaces--assign-declared-project)
         (add-hook 'treemacs-switch-workspace-hook
                   #'treemacs-declarative-workspaces--override-workspaces))
     (progn
-      (advice-remove 'treemacs-add-and-display-current-project #'(lambda (&rest args) (treemacs--init)) )
+      (treemacs-declarative-workspaces--save-cache)
+      (advice-remove 'treemacs-add-and-display-current-project #'(lambda (&rest _) (treemacs--init)) )
       (remove-hook 'declarative-project--apply-treemacs-workspaces-hook
                    #'treemacs-declarative-workspaces--assign-declared-project)
       (remove-hook 'treemacs-switch-workspace-hook
