@@ -10,9 +10,9 @@ any changes in the side-buffer.
 
 This package is intended for use in conjunction with the [[https://github.com/cuttlefisch/declarative-project-mode][declarative project mode
 package]], which allows users to specify their project contents and associated workspaces
-in a simple declarative .project file. See that project for example project specification.
+in a simple declarative PROJECT.yaml file. See that project for example project specification.
 Enabling treemacs-declarative-workspaces-mode will result in updates to the desired state
-when installing workspaces specified in the .project file.
+when installing workspaces specified in the PROJECT.yaml file.
 
 Please note that this package is currently in experimental stages, and as such may contain
 bugs or have limited functionality. We welcome any feedback or contributions to improve

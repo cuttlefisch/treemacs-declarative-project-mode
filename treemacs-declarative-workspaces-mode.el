@@ -185,7 +185,7 @@ treemacs-declarative-workspaces--desired-state."
 (define-minor-mode treemacs-declarative-workspaces-mode
   "Manage treemacs workspaces via distrubuted declarative files.
 
-This package allows users to place `.project' files anywhere across
+This package allows users to place `PROJECT.yaml' files anywhere across
 the fileystem, and install them to treemacs workspaces via the
 `declarative-project-mode' package. The desired state of workspaces
 is then tracked via a central cache inside `user-emacs-directory'.
