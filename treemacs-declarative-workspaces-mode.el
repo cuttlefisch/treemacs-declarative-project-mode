@@ -161,11 +161,12 @@ treemacs-declarative-workspaces--desired-state."
 
 (defun treemacs-declarative-workspaces--assign-declared-project (project-resources)
   "Assign a project with PROJECT-RESOURCES when it's declared."
+  (message "from treemacs: project-resources:\t%s" project-resources)
  (when treemacs-declarative-workspaces-mode
-  (when-let ((project-workspaces (gethash 'treemacs-workspaces project-resources))
-             (project-file (gethash 'project-file project-resources)))
+  (when-let ((project-workspaces (declarative-project-workspaces project-resources))
+             (project-file (declarative-project-project-file project-resources)))
     (seq-doseq (workspace project-workspaces)
-      (let* ((project-name (or (gethash 'project-name
+      (let* ((project-name (or (declarative-project-name
                                         project-resources)
                                workspace))
              (project-attrs (list
