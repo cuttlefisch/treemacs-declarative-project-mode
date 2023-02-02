@@ -90,6 +90,8 @@ treemacs-declarative-workspaces--desired-state."
 (defun treemacs-declarative-workspaces--read-cache ()
   "Write current desired state to cache file."
   (with-temp-buffer
+    (unless (file-exists-p treemacs-declarative-workspaces--cache-file)
+      (treemacs-declarative-workspaces--save-cache))
     (insert-file-contents treemacs-declarative-workspaces--cache-file)
     (let ((cached-state (buffer-string)))
       (cond
@@ -161,17 +163,14 @@ treemacs-declarative-workspaces--desired-state."
 
 (defun treemacs-declarative-workspaces--assign-declared-project (project-resources)
   "Assign a project with PROJECT-RESOURCES when it's declared."
-  (message "from treemacs: project-resources:\t%s" project-resources)
  (when treemacs-declarative-workspaces-mode
   (when-let ((project-workspaces (declarative-project-workspaces project-resources))
-             (project-file (declarative-project-project-file project-resources)))
+             (root-directory (declarative-project-root-directory project-resources)))
     (seq-doseq (workspace project-workspaces)
-      (let* ((project-name (or (declarative-project-name
-                                        project-resources)
-                               workspace))
+      (let* ((project-name (or (declarative-project-name project-resources) workspace))
              (project-attrs (list
                              :name project-name
-                             :path (file-name-directory project-file)
+                             :path root-directory
                              :path-status 'local-readable
                              :is-disabled? nil)))
         (treemacs-declarative-workspaces--assign-project project-attrs
