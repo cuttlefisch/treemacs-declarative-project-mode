@@ -151,9 +151,10 @@ Prompt before removing if nil.")
                                           project-attrs)))
                   treemacs-declarative-workspaces--desired-state
                   :test #'equal))))
+  (treemacs-declarative-workspaces--save-cache)
+  (treemacs-declarative-workspaces--read-cache)
   (when treemacs-declarative-workspaces-mode
-    (treemacs-declarative-workspaces--override-workspaces))
-  (treemacs-declarative-workspaces--save-cache))
+    (treemacs-declarative-workspaces--override-workspaces)))
 
 (defun treemacs-declarative-workspaces--assign-declared-project (project-resources)
   "Assign a project with PROJECT-RESOURCES when it's declared."
