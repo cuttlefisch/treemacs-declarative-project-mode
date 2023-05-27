@@ -78,6 +78,10 @@ Prompt before removing if nil.")
                ',treemacs-declarative-workspaces--desired-state)
              buf))))
 
+;; TODO this isn't reading cache so much as overriding current workspaces with
+;; contents of the default cache file. probably need to break this out into
+;; - read and return current cache value
+;; - overwrite desired state from specific file
 (defun treemacs-declarative-workspaces--read-cache ()
   "Write current desired state to cache file."
   (with-temp-buffer
@@ -151,9 +155,10 @@ Prompt before removing if nil.")
                                           project-attrs)))
                   treemacs-declarative-workspaces--desired-state
                   :test #'equal))))
+  (treemacs-declarative-workspaces--save-cache)
+  (treemacs-declarative-workspaces--read-cache)
   (when treemacs-declarative-workspaces-mode
-    (treemacs-declarative-workspaces--override-workspaces))
-  (treemacs-declarative-workspaces--save-cache))
+    (treemacs-declarative-workspaces--override-workspaces)))
 
 (defun treemacs-declarative-workspaces--assign-declared-project (project-resources)
   "Assign a project with PROJECT-RESOURCES when it's declared."
@@ -167,7 +172,9 @@ Prompt before removing if nil.")
                                :path root-directory
                                :path-status 'local-readable
                                :is-disabled? nil)))
-          (treemacs-declarative-workspaces--assign-project project-attrs workspace))))))
+          (treemacs-declarative-workspaces--assign-project project-attrs workspace)))
+      (treemacs-declarative-workspaces--override-workspaces)
+      (treemacs-declarative-workspaces--save-cache))))
 
 (defun treemacs-declarative-workspaces--override-workspaces ()
   "Set treemacs-workspaces to desired state."
